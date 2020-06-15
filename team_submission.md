@@ -1,5 +1,3 @@
-This is a sample of the `team_submission.md` that should accompany your submission.
-
 A slide was created, and is available in these files: Trends in Online Entertainment during the Pandemic.pptx.pdf.
 
 A write-up was created, and is available in these files: (add links/file names as appropriate).
