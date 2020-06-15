@@ -1,0 +1,155 @@
+---
+title: "DataFest 2020 - Trends in Online Entertainment during the Pandemic"
+author: "Team AJA"
+date: "13/06/2020"
+output: html_document
+---
+# Online Entertainment During the COVID-19 Pandemic
+
+## Introduction
+
+While we are all stranded at home due to the ongoing pandemic, we would naturally want to seek online entertainment at home. Since the outbreak, what trends do we see in online entertainment?
+
+Today, we would be conducting a research on trends in movie industry during the pandemic. Do people watch more movies now, and what genres have become more popular? 
+
+## Package setup
+
+Today, we will be using two packages: gtrendsR and TMDb. 
+
+gtrendsR packs Google trend results into R to alllow us for data analyses in what people search the most.
+
+TMDb is an open movie database that collects popularity, genre, ratings of movies.
+
+```{r setup, echo = TRUE, include=FALSE}
+
+if (!require("gtrendsR")) install.packages("gtrendsR")
+if (!require("TMDb")) install.packages("TMDb")
+if (!require("tidyverse")) install.packages("tidyverse")
+if (!require("ggplot2")) install.packages("ggplot2")
+library('TMDb')
+library('gtrendsR')
+library('ggplot2')
+library('tidyverse')
+
+```
+
+
+## API Import 
+
+Hidden due to user agreement and privacy issues. The value 'api_key' now contains author's unique API number in order to access TMDb (The Movie Database). Note that TMDb is still an open database for research purposes.
+
+```{r, echo = FALSE}
+api_key <- "202a5013c250138410ab25e0a7ad35e1"
+```
+
+
+## Do People Watch More Online Entertainments from steaming services?
+
+Since none of the major streaming service is opening their database to the public, we must use Google Trends data here to reflect people's interest in streaming services.
+
+```{r, echo=TRUE}
+netflix_trend <- gtrends(c("Netflix"), geo = c("US","CA"), time = "2020-01-01 2020-06-13",onlyInterest = FALSE)
+plot(netflix_trend)
+```
+
+The case of Netflix best reflects the raise in popularity of online streaming after the lockdown: we see a sudden spike as of late March, and the interest in Netflix has since been higher than the pre-lockdown level. Also, Canadian audiences are more keen to using the service!
+
+```{r, echo=TRUE}
+hbo_trend <- gtrends(c("HBO"), geo = c("US"，"CA"), time = "2020-01-01 2020-06-13",onlyInterest = FALSE)
+plot(hbo_trend)
+```
+
+Note that the sudden spike of HBO interest in late May is probably due to the introduction of HBO MAX, a new service based on HBO with more deluxe contents and exclusive shows.
+
+```{r, echo=TRUE}
+disney_trend <- gtrends(c("Disney+"), geo = c("US"，"CA"), time = "2020-01-01 2020-06-13",onlyInterest = FALSE)
+plot(disney_trend)
+```
+
+For the case of Disney+, since the service was first launched in last December, it would be natural to see a declining hype from early January to March. However, we do see a spike in late March - the time when universal lockdown was implemented in both US and Canada.
+
+
+## What do people watch the most?
+
+Now that we can confirm that there has been an increased interest in online entertainment since the lockdown, now we want to explore what type of movies people are interested in watching. 
+
+To do so, we would introduce TMDb, an online open movie database. We can access the database in R using a package simply called TMDb, where we can retrieve information of movies. 
+
+Here we select 100 most popular movies on TMDb as of June 13th, 2020 using the function movie_popular.
+
+```{r, echo = TRUE}
+
+popular_movies <- data.frame()
+
+for (i in 1:5)
+{
+  popular_movies <- rbind(popular_movies, data.frame(movie_popular(api_key, page = i, language = NA)))
+}
+
+glimpse(popular_movies)
+```
+We now extract the unique IDs of each movie into a vector.
+
+
+```{r}
+popular_movies_id <- select(popular_movies, results.id)
+popular_movies_id <- as.vector(popular_movies_id)
+```
+
+We can use the unique movie IDs to indicate their genres using the function movie(). What movies do people watch at home?
+
+```{r}
+
+genres_trending <- data.frame()
+
+for (i in 1:nrow(popular_movies_id))
+{
+
+
+  genres_trending <- rbind(genres_trending, movie(api_key, popular_movies_id[i,]) $ genres)
+  
+
+}  
+
+summary(genres_trending)
+```
+
+
+
+```{r}
+
+genre_count <- table(genres_trending$name)
+barplot(genre_count)
+
+#genres_trending %>% ggplot(aes(x = name,y = id, colour = name)) +geom_bar(aes(group=name))
+genre_count
+```
+
+As we can see here, the top genres are still very much what we expect to be the popular genres of movies: action, adventure, drama, sci-fi...
+Let's see if they have gained popularity because of the lockdown, or there simply has not been a shift in genre tastes in general.
+
+## A shift in taste?
+
+Unfortunately, TMDb does not provide a movie's past popularity in their database. To explore this question, we input these genres back into Google trend to see if there has been a significant change in tastes among these popular genres. 
+
+gtrends could only plot 5 keywords at a time. We have decided to do multiple plots here.
+
+```{r}
+movie_genre_trend_1 <- gtrends(c("Action Movies","Adventure Movies","Horror Movies"), geo = c("US"), time = "2020-01-01 2020-06-13",onlyInterest = FALSE)
+plot(movie_genre_trend_1)
+```
+
+```{r}
+movie_genre_trend_2 <- gtrends(c("Comedy Movies","Sci fi Movies","Drama"), geo = c("US"), time = "2020-01-01 2020-06-13",onlyInterest = FALSE)
+plot(movie_genre_trend_2)
+```
+
+```{r}
+movie_genre_trend_3 <- gtrends(c("Thriller Movies","Romance Movies","Family Movies"), geo = c("US"), time = "2020-01-01 2020-06-13",onlyInterest = FALSE)
+plot(movie_genre_trend_3)
+```
+
+# Conclusion
+
+Overall, we can observe that people have watched significantly more action, family, drama, and comedy movies than other genres. Relatively, we see insignificant increase in genres like thriller, sci-fi, and adventure. Overall, people tend to watch more family-friendly and easy-watching movies after the lockdown.
+
